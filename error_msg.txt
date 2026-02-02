@@ -1,0 +1,3 @@
+Action: CreateChangeSet
+Summary: None
+Details: Role arn:aws:iam::637423186957:role/MyLambdaPipelineStack-CodeBuildServiceRole-aobN8Ih1vfeq is invalid or cannot be assumed (Service: AmazonCloudFormation; Status Code: 400; Error Code: ValidationError; Request ID: 0158390f-60cf-4521-9e2b-65e590c6e635; Proxy: null)
