@@ -3,21 +3,34 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.9
+      python: 3.11
     commands:
-      - echo Installing dependencies...
-      # - pip install -r Template/requirements.txt # Uncomment if needed
+      - echo "Installing dependencies..."
+      - cd Template
+      - |
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt -t .
+        fi
+      - cd ..
+
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the SAM application...
-      - sam build -t Template/template.yaml
-  post_build:
-    commands:
-      - echo Build completed on `date`
-      - echo Packaging...
-      - sam package --template-file .aws-sam/build/template.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file packaged.yaml
+      - echo "Build started on `date`"
+      - echo "Packaging Lambda code..."
+      - cd Template
+      - zip -r ../$CODE_S3_KEY . -x "*.git*" -x "*__pycache__*" -x "*.pyc"
+      - cd ..
+      - echo "Uploading to S3..."
+      - aws s3 cp $CODE_S3_KEY s3://$BUILD_OUTPUT_BUCKET/$CODE_S3_KEY
+      - echo "Updating Lambda function..."
+      - |
+        aws lambda update-function-code \
+          --function-name $LAMBDA_FUNCTION_NAME \
+          --s3-bucket $BUILD_OUTPUT_BUCKET \
+          --s3-key $CODE_S3_KEY
+      - echo "Build completed on `date`"
 
 artifacts:
   files:
-    - packaged.yaml
+    - '**/*'
+  name: BuildArtifact

@@ -1,27 +1,163 @@
-AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  Sample SAM Template for CI/CD Deployment
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda Infrastructure Stack (POC - Company Standards)
 
-Globals:
-  Function:
-    Timeout: 3
+Parameters:
+  ResourceNamePrefix:
+    Type: String
+    Description: Prefix for resource naming
+    Default: MyCompany
+  
+  Environment:
+    Type: String
+    Description: Environment name
+    Default: Poc
+  
+  ServiceName:
+    Type: String
+    Description: Service name
+    Default: Lambda-CICD
+  
+  ApplicationId:
+    Type: String
+    Description: Application identifier for tagging
+    Default: LambdaCICD
+  
+  LambdaMemory:
+    Type: String
+    Description: Lambda memory size in MB
+    Default: '512'
+    AllowedValues:
+      - '128'
+      - '256'
+      - '512'
+      - '1024'
+      - '1536'
+      - '2048'
+  
+  Timeout:
+    Type: String
+    Description: Lambda timeout in seconds
+    Default: '60'
+  
+  Runtime:
+    Type: String
+    Description: Lambda runtime
+    Default: python3.11
+    AllowedValues:
+      - python3.11
+      - python3.9
+      - nodejs20.x
+      - ruby3.2
+  
+  Handler:
+    Type: String
+    Description: Lambda handler
+    Default: lambda_function.lambda_handler
+  
+  CodeZipFileName:
+    Type: String
+    Description: Name of the deployment zip file
+    Default: lambda_code.zip
+  
+  ArtifactBucketName:
+    Type: String
+    Description: S3 bucket containing Lambda code
+    Default: cicdpipeline0720
+  
+  LogRetentionDays:
+    Type: Number
+    Description: CloudWatch Logs retention in days
+    Default: 7
 
 Resources:
-  MyCiCdFunction:
+  # Lambda Execution Role
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda:*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Role'
+        - Key: ApplicationRole
+          Value: !Sub '${ApplicationId}-Role'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # CloudWatch Log Group
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda'
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Logs'
+        - Key: ApplicationRole
+          Value: !Sub '${ApplicationId}-Lg'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Lambda Function
+  Lambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: lambda_function.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - x86_64
-      Description: A sample lambda deployment from CI/CD
+      FunctionName: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda'
+      Description: Lambda function deployed via CI/CD pipeline
+      Handler: !Ref Handler
+      MemorySize: !Ref LambdaMemory
+      CodeUri:
+        Bucket: !Ref ArtifactBucketName
+        Key: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda/latest/${CodeZipFileName}'
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: !Ref Runtime
+      Timeout: !Ref Timeout
+      Environment:
+        Variables:
+          AWS_REGION_NAME: !Ref AWS::Region
+          ENVIRONMENT: !Ref Environment
+          APPLICATION_ID: !Ref ApplicationId
+      Tags:
+        Name: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda'
+        ApplicationRole: !Sub '${ApplicationId}-Func'
+        Environment: !Ref Environment
 
 Outputs:
-  MyCiCdFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt MyCiCdFunction.Arn
-  MyCiCdFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt MyCiCdFunctionRole.Arn
+  LambdaFunctionName:
+    Description: Lambda function name
+    Value: !Ref Lambda
+    Export:
+      Name: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Name'
+  
+  LambdaFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt Lambda.Arn
+    Export:
+      Name: !Sub '${ResourceNamePrefix}-${Environment}-${ServiceName}-Lambda-Arn'
+  
+  LambdaRoleArn:
+    Description: Lambda execution role ARN
+    Value: !GetAtt LambdaRole.Arn
