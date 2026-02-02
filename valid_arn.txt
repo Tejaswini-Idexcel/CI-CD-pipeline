@@ -1,1 +1,0 @@
-arn:aws:codeconnections:us-east-1:637423186957:connection/a4b5b992-d30b-46aa-8ec1-76d1932232ea
