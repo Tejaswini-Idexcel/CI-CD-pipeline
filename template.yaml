@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sample SAM Template for CI/CD Deployment
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  MyCiCdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Description: A sample lambda deployment from CI/CD
+
+Outputs:
+  MyCiCdFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt MyCiCdFunction.Arn
+  MyCiCdFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt MyCiCdFunctionRole.Arn

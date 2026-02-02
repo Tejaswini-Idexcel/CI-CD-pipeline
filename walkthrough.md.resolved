@@ -1,0 +1,35 @@
+# CI/CD Pipeline Walkthrough
+
+I have created the necessary files to deploy your AWS Lambda function using a CI/CD pipeline (AWS CodePipeline + CodeBuild) with AWS SAM.
+
+## Files Created
+
+### 1. Lambda Function
+[lambda_function.py](file:///c%3A/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/lambda_function.py)
+- A simple Python function that returns a "Hello from AWS Lambda CI/CD Pipeline!" message.
+
+### 2. Infrastructure as Code (SAM Template)
+[template.yaml](file:///c%3A/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/template.yaml)
+- Defines the Lambda function resource (`MyCiCdFunction`).
+- Sets the runtime to `python3.9`.
+- Uses the [lambda_function.py](file:///c:/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/lambda_function.py) code from the current directory.
+
+### 3. Build Specification
+[buildspec.yml](file:///c%3A/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/buildspec.yml)
+- Installs dependencies (if any).
+- Builds the SAM application (`sam build`).
+- Deploys the application (`sam deploy`).
+    - **Note**: The deploy command is configured to create/update a stack named `my-cicd-lambda-stack`.
+
+### 4. Documentation
+[README.md](file:///c%3A/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/README.md)
+- Instructions on how to set up the repository and trigger the build.
+
+## Next Steps for You
+
+1. **Commit and Push**: Push these files to your source repository (AWS CodeCommit, GitHub, etc.).
+2. **Setup CodeBuild/CodePipeline**:
+    - Create a new Project in AWS CodeBuild pointing to your repository.
+    - Use the [buildspec.yml](file:///c:/Users/tejaswini.v/OneDrive%20-%20Idexcel/Documents/CI-CD%20pipeline/buildspec.yml) file I created.
+    - Ensure your CodeBuild Service Role has permissions to create CloudFormation stacks, Lambda functions, and IAM roles.
+3. **Run Build**: Trigger the build and watch your Lambda function get deployed!
