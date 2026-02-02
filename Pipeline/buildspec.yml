@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo Installing dependencies...
+      # - pip install -r Template/requirements.txt # Uncomment if needed
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the SAM application...
+      - sam build -t Template/template.yaml
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Packaging...
+      - sam package --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file packaged.yaml
+
+artifacts:
+  files:
+    - packaged.yaml
