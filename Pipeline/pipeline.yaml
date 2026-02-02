@@ -1,18 +1,20 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CodePipeline for Lambda Deployment
-
 Parameters:
-  GitHubRepository:
+  GitHubOwner:
     Type: String
-    Description: GitHub Repository (e.g., username/repo)
-    Default: Tejaswini-Idexcel/CI-CD-pipeline
+    Description: GitHub Username or Organization
+    Default: Tejaswini-Idexcel
+  GitHubRepo:
+    Type: String
+    Description: GitHub Repository Name
+    Default: CI-CD-pipeline
   GitHubBranch:
     Type: String
     Description: Branch to trigger the pipeline
     Default: master
-  ConnectionArn:
+  GitHubToken:
     Type: String
-    Description: ARN of the CodeStar Connection to GitHub
+    Description: GitHub Personal Access Token (OAuth Class 1)
+    NoEcho: true
 
 Resources:
   # S3 Bucket for Artifacts
@@ -118,10 +120,6 @@ Resources:
                   - cloudformation:*
                   - iam:PassRole
                 Resource: "*"
-              - Effect: Allow
-                Action:
-                  - codestar-connections:UseConnection
-                Resource: !Ref ConnectionArn
 
   # CodePipeline
   MyPipeline:
@@ -138,15 +136,16 @@ Resources:
             - Name: GitHub_Source
               ActionTypeId:
                 Category: Source
-                Owner: AWS
-                Provider: CodeStarSourceConnection
+                Owner: ThirdParty
+                Provider: GitHub
                 Version: '1'
               OutputArtifacts:
                 - Name: SourceOutput
               Configuration:
-                ConnectionArn: !Ref ConnectionArn
-                FullRepositoryId: !Ref GitHubRepository
-                BranchName: !Ref GitHubBranch
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
         - Name: Build
           Actions:
             - Name: Build
