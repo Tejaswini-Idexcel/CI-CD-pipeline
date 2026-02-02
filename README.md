@@ -4,9 +4,14 @@ This project contains source code and supporting files for a serverless applicat
 
 ## Project Structure
 
-- `lambda_function.py` - Code for the application's Lambda function.
-- `template.yaml` - A template that defines the application's AWS resources.
-- `buildspec.yml` - The build specification for AWS CodeBuild.
+This project follows the company standard directory structure:
+
+- **`Pipeline/`**
+    - `buildspec.yml` - Build specification for AWS CodeBuild (Builds and Packages).
+    - `pipeline.yaml` - CloudFormation template defining the CodePipeline, CodeBuild, and Deploy stages.
+- **`Template/`**
+    - `lambda_function.py` - Code for the application's Lambda function.
+    - `template.yaml` - AWS SAM template defining the application's AWS resources.
 
 ## Deployment Instructions
 

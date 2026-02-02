@@ -16,7 +16,7 @@ phases:
     commands:
       - echo Build completed on `date`
       - echo Packaging...
-      - sam package --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file packaged.yaml
+      - sam package --template-file .aws-sam/build/template.yaml --s3-bucket $BUILD_OUTPUT_BUCKET --output-template-file packaged.yaml
 
 artifacts:
   files:
